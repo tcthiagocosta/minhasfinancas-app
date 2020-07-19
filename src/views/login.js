@@ -1,7 +1,12 @@
 import React from 'react';
 import Card from '../components/card'
 import FormGroup from '../components/form-group'
-import {withRouter} from 'react-router-dom'
+import { withRouter } from 'react-router-dom'
+import { mensagemErro } from '../components/toastr'
+
+import UsuarioService from '../app/service/usuarioService'
+import LocalStoregeService from '../app/service/localstoregeService'
+
 
 class Login extends React.Component {
 
@@ -10,9 +15,22 @@ class Login extends React.Component {
     senha: ''
   }
 
-  entrar = () => {
-    console.log('Email: ', this.state.email)
-    console.log('Senha: ', this.state.senha)
+  constructor() {
+    super();
+    this.service = new UsuarioService();
+  }
+
+  entrar = async () => {
+    this.service.autentiar({
+      email: this.state.email,
+      senha: this.state.senha
+    }).then(response => {
+      LocalStoregeService.adicionarItem('_usuario_logado',response.data)
+
+      this.props.history.push('/home')
+    }).catch(error => {
+      mensagemErro(error.response.data)
+    })
   }
 
   prepareCadastro = () => {
