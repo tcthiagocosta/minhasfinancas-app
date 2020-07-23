@@ -57,7 +57,22 @@ export default class UsuarioService extends ApiService {
     }
 
     return this.get(params)
+  }
 
+  deletar(id) {
+    return this.delete(`/${id}`)
+  }
+
+  salvar(lancamento) {
+    return this.post('/', lancamento)
+  }
+
+  obeterPoId(id) {
+    return this.get(`/${id}`)
+  }
+
+  atualizar(lancamento) {
+    return this.put(`/${lancamento.id}`, lancamento)
   }
 
 }

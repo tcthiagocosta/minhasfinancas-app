@@ -7,6 +7,9 @@ import Card from '../../components/card'
 import FormGroup from '../../components/form-group'
 import SelectMenu from '../../components/selectMenu'
 import LancamentosTable from './lancamentosTable'
+import { Dialog } from 'primereact/dialog';
+import { Button } from 'primereact/button';
+
 
 import LocalStoregeService from '../../app/service/localstoregeService'
 import LancamentoService from '../../app/service/lancamentoService'
@@ -18,7 +21,9 @@ class ConsultaLancamento extends React.Component {
     mes: '',
     tipo: '',
     descricao: '',
-    lancamentos: []
+    lancamentos: [],
+    showConfirmDialog: false,
+    lancamentoDeletar: {}
   }
 
   constructor() {
@@ -26,12 +31,40 @@ class ConsultaLancamento extends React.Component {
     this.service = new LancamentoService()
   }
 
+  editar = (id) => {
+    this.props.history.push(`/cadastro-lancamento/${id}`)
+  }
+
+  abrirConfirmacao = (lancamento) => {
+    this.setState({ showConfirmDialog: true, lancamentoDeletar: lancamento })
+  }
+
+  cancelarDelecao = () => {
+    this.setState({ showConfirmDialog: false, lancamentoDeletar: {} })
+  }
+
+  deletar = () => {
+    this.service.deletar(this.state.lancamentoDeletar.id)
+      .then(response => {
+
+        // Removendo o lancamento do array
+        const lancamentos = this.state.lancamentos
+        const index = lancamentos.indexOf(this.state.lancamentoDeletar)
+        lancamentos.splice(index, 1)
+        this.setState({ lancamentos: lancamentos, showConfirmDialog: false })
+
+        messages.mensagemSucesso('lançamento deletado com sucesso.')
+      }).catch(erro => {
+        messages.mensagemErro('Ocorrou um erro ao tentar deletar o lançamento.')
+      })
+
+  }
+
   buscar = () => {
-    if(!this.state.ano) {
+    if (!this.state.ano) {
       messages.mensagemErro('O preenchimento do campo ano é obrigatório.')
       return false
     }
-
 
     const usuarioLogado = LocalStoregeService.obterItem('_usuario_logado')
 
@@ -45,10 +78,14 @@ class ConsultaLancamento extends React.Component {
 
     this.service.consultar(lancamentoFiltro)
       .then(resposta => {
-        this.setState({lancamentos : resposta.data})
+        this.setState({ lancamentos: resposta.data })
       }).catch(erro => {
         console.log(erro)
       })
+  }
+
+  preparaFormularioCadastro = () => {
+    this.props.history.push('/cadastro-lancamento')
   }
 
 
@@ -56,6 +93,13 @@ class ConsultaLancamento extends React.Component {
 
     const meses = this.service.obterListaMeses()
     const tipos = this.service.obterListaTipos()
+
+    const confirmDialogFooter = (
+      <div>
+        <Button label="Confirma" icon="pi pi-check" onClick={this.deletar} />
+        <Button label="Cancelar" icon="pi pi-times" onClick={this.cancelarDelecao} />
+      </div>
+    )
 
     return (
       <Card title="Consulta Lançamentos">
@@ -105,7 +149,7 @@ class ConsultaLancamento extends React.Component {
               </FormGroup>
 
               <button onClick={this.buscar} className="btn btn-success">Buscar</button>
-              <button className="btn btn-danger">Cadastrar</button>
+              <button onClick={this.preparaFormularioCadastro} className="btn btn-danger">Cadastrar</button>
             </div>
           </div>
         </div>
@@ -113,9 +157,20 @@ class ConsultaLancamento extends React.Component {
         <div className="row">
           <div className="col-lg-12">
             <div className="bs-component">
-              <LancamentosTable lancamentos={this.state.lancamentos} />
+              <LancamentosTable lancamentos={this.state.lancamentos} deleteAction={this.abrirConfirmacao} editAction={this.editar} />
             </div>
           </div>
+        </div>
+        <div>
+          <Dialog header="Godfather I"
+            visible={this.state.showConfirmDialog}
+            style={{ width: '50vw' }}
+            footer={confirmDialogFooter}
+            modal={true}
+            onHide={() => this.setState({ visible: false })}
+          >
+            Confirma a exclusão deste lançamento
+        </Dialog>
         </div>
       </Card>
     )
