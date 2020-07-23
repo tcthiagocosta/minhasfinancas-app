@@ -78,7 +78,13 @@ class ConsultaLancamento extends React.Component {
 
     this.service.consultar(lancamentoFiltro)
       .then(resposta => {
-        this.setState({ lancamentos: resposta.data })
+
+        const lista = resposta.data
+        if (lista.length < 1) {
+          messages.mensagemAlert('Nenhum resultado encontrado.')
+        }
+
+        this.setState({ lancamentos: lista })
       }).catch(erro => {
         console.log(erro)
       })
@@ -86,6 +92,22 @@ class ConsultaLancamento extends React.Component {
 
   preparaFormularioCadastro = () => {
     this.props.history.push('/cadastro-lancamento')
+  }
+
+  alterarStatus = (lancamento, status) => {
+    this.service.alterarStatus(lancamento.id, status)
+      .then(response => {
+        const lancamentos = this.state.lancamentos
+        const index = lancamentos.indexOf(lancamento)
+
+        if (index !== -1) {
+          lancamento['status'] = status
+          lancamentos[index] = lancamento
+          this.setState({lancamentos})
+        }
+
+        messages.mensagemSucesso("Status atualizado com sucesso!")
+      })
   }
 
 
@@ -148,8 +170,8 @@ class ConsultaLancamento extends React.Component {
                 />
               </FormGroup>
 
-              <button onClick={this.buscar} className="btn btn-success">Buscar</button>
-              <button onClick={this.preparaFormularioCadastro} className="btn btn-danger">Cadastrar</button>
+              <button onClick={this.buscar} className="btn btn-success"><i className="pi pi-search"></i> Buscar</button>
+              <button onClick={this.preparaFormularioCadastro} className="btn btn-danger"><i className="pi pi-plus"></i> Cadastrar</button>
             </div>
           </div>
         </div>
@@ -157,7 +179,10 @@ class ConsultaLancamento extends React.Component {
         <div className="row">
           <div className="col-lg-12">
             <div className="bs-component">
-              <LancamentosTable lancamentos={this.state.lancamentos} deleteAction={this.abrirConfirmacao} editAction={this.editar} />
+              <LancamentosTable lancamentos={this.state.lancamentos} 
+                deleteAction={this.abrirConfirmacao} 
+                editAction={this.editar}
+                alterarStatus={this.alterarStatus} />
             </div>
           </div>
         </div>

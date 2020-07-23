@@ -1,6 +1,6 @@
 import React from 'react';
 import { withRouter } from 'react-router-dom'
-import { mensagemErro, mensagemSucesso } from '../components/toastr'
+import * as messages from '../components/toastr'
 
 import Card from '../components/card'
 import FormGroup from '../components/form-group'
@@ -23,55 +23,29 @@ class Cardastrousuario extends React.Component {
 
   cadastrar = () => {
 
-    const msgs = this.validar()
+    const { nome, email, senha, senhaRepeticao } = this.state
 
-    if (msgs && msgs.length > 0) {
-      msgs.forEach((msg, index) => {
-        mensagemErro(msg)
-      })
+    const usuario = { nome, email, senha, senhaRepeticao }
 
+    try {
+      this.service.validar(usuario)
+    } catch (erro) {
+      const mensagens = erro.mensagens
+      mensagens.forEach(msg => messages.mensagemErro(msg));
       return false
     }
 
-    const usuario = {
-      nome: this.state.nome,
-      email: this.state.email,
-      senha: this.state.senha
-    }
-
     this.service.salvar(usuario)
-      .then( response => {
-        mensagemSucesso('Usuário cadastrado com sucesso! Faça o login para acessar o sistema.')
+      .then(response => {
+        messages.mensagemSucesso('Usuário cadastrado com sucesso! Faça o login para acessar o sistema.')
         this.props.history.push('/login')
       }).catch(erro => {
-        mensagemErro(erro.response.data)
+        messages.mensagemErro(erro.response.data)
       })
   }
 
   cancelar = () => {
     this.props.history.push('/login')
-  }
-
-  validar() {
-    const msgs = []
-
-    if (!this.state.nome) {
-      msgs.push('O campo Nome é obrigatório')
-    }
-
-    if (!this.state.email) {
-      msgs.push('O campo Email é obrigatório')
-    } else if (!this.state.email.match(/^[a-z0-9.]+@[a-z0-9]+\.[a-z]/)) {
-      msgs.push('Informe um Email válido')
-    }
-
-    if (!this.state.senha || !this.state.senhaRepeticao) {
-      msgs.push('Digite a senha 2x.')
-    } else if (this.state.senha !== this.state.senhaRepeticao) {
-      msgs.push('As senhas não batem.')
-    }
-
-    return msgs
   }
 
   render() {
@@ -124,8 +98,8 @@ class Cardastrousuario extends React.Component {
                 />
               </FormGroup>
 
-              <button onClick={this.cadastrar} className="btn btn-success">Salvar</button>
-              <button onClick={this.cancelar} className="btn btn-danger">Cancelar</button>
+              <button onClick={this.cadastrar} className="btn btn-success"><i className="pi pi-save"></i> Salvar</button>
+              <button onClick={this.cancelar} className="btn btn-danger"><i className="pi pi-times"></i> Cancelar</button>
 
             </div>
           </div>

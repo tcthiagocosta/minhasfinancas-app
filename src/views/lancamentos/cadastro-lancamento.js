@@ -47,9 +47,17 @@ class CadastroLancamento extends React.Component {
     const usuarioLogado = LocalStoregeService.obterItem('_usuario_logado')
 
     const {descricao, valor, mes, ano, tipo} = this.state
-    const Lançamento = {descricao, valor, mes, ano, tipo, usuario: usuarioLogado.id}
+    const lancamento = {descricao, valor, mes, ano, tipo, usuario: usuarioLogado.id}
 
-    this.service.salvar(Lançamento)
+    try {
+      this.service.validar(lancamento)
+    } catch (erro) {
+      const mensagens = erro.mensagens
+      mensagens.forEach(msg => messages.mensagemErro(msg));
+      return false
+    }
+
+    this.service.salvar(lancamento)
       .then(response => {
         this.props.history.push('/consulta-lancamento')
         messages.mensagemSucesso('Lançamento cadastro com sucesso.')        
@@ -60,9 +68,9 @@ class CadastroLancamento extends React.Component {
 
   atualizar =() => {
     const {descricao, valor, mes, ano, tipo, status, id, usuario} = this.state
-    const Lançamento = {descricao, valor, mes, ano, tipo, id, usuario, status}
+    const lancamento = {descricao, valor, mes, ano, tipo, id, usuario, status}
 
-    this.service.atualizar(Lançamento)
+    this.service.atualizar(lancamento)
       .then(response => {
         this.props.history.push('/consulta-lancamento')
         messages.mensagemSucesso('Lançamento atualziado com sucesso.')        
@@ -170,12 +178,12 @@ class CadastroLancamento extends React.Component {
           <div className="col-md-6">
             {this.state.atualizando ?
               (
-                <button onClick={this.atualizar} className="btn btn-primary">Atualizar</button>
+                <button onClick={this.atualizar} className="btn btn-primary"><i className="pi pi-refresh"></i> Atualizar</button>
               ) : (
-                <button onClick={this.submit} className="btn btn-success">Salvar</button>
+                <button onClick={this.submit} className="btn btn-success"><i className="pi pi-save"></i> Salvar</button>
               )
             }
-            <button onClick={e => this.props.history.push('/consulta-lancamento')} className="btn btn-danger">Cancelar</button>
+            <button onClick={e => this.props.history.push('/consulta-lancamento')} className="btn btn-danger"><i className="pi pi-times"></i> Cancelar</button>
           </div>
         </div>
       </Card>
